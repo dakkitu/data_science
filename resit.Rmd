@@ -1,0 +1,209 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+```{r}
+cw=COMP4030_resit_data
+```
+```{r}
+df=data.frame(cw)
+df
+```
+```{r}
+summary(df)
+```
+```{r}
+library(ggplot2)
+par(mfrow=c(4,4))
+for(i in 2:15)
+   {
+    
+    hist(df[,i],xlab=names(df)[i],main="histogram")
+   }
+   
+```
+```{r}
+pairs(df[,c('free.sulfur.dioxide','volatile.acidity')])
+cor(df$free.sulfur.dioxide,df$volatile.acidity)
+```
+```{r}
+pairs(df[,c('pH','fixed.acidity')])
+cor(df$pH,df$fixed.acidity)
+```
+```{r}
+pairs(df2[,c('density','fixed.acidity')])
+cor(df2$density,df2$fixed.acidity)
+```
+```{r}
+df1=df
+df2=df
+df3=df
+for(i in 1:15)
+{
+for(j in 1:1600)
+{
+if(is.na(df1[j,i]))
+    df1[j,i]=mean(df1[,i],na.rm=TRUE)
+if(is.na(df2[j,i]))
+    df2[j,i]=median(df2[,i],na.rm=TRUE)
+if(is.na(df3[j,i]))
+    df3[j,i]=0
+}
+}
+colSums(is.na(df))
+```
+```{r}
+library(ggplot2)
+plot(df$residual.sugar,df$quality,xlab="residual sugar",ylab="quality",main="scatterplot")
+```
+```{r}
+plot(df$citric.acid,df$quality,xlab="citric acid",ylab="quality",main="scatterplot")
+```
+```{r}
+plot(df$pH,df$quality,xlab="pH",ylab="quality",main="scatterplot")
+```
+```{r}
+create_boxplot=function(bx)
+{
+par(mfrow=c(3,3))
+for(column in 1:(ncol(bx)-1))
+    {
+    boxplot(bx[,column]~bx$quality,xlab = "quality",ylab= names(bx)[column])
+}
+  
+}
+create_boxplot(df)
+```
+```{r}
+pca=prcomp(data.frame(scale(df2[,-c(7,12,15)])),scale=T)
+reduced_dataset=scale(df2[,-c(7,12,15)])
+new_dataset=data.frame(data.matrix(reduced_dataset)%*%data.matrix(pca$rotation[,1:8]))
+new_dataset=data.frame(new_dataset,class=df[,15])
+#new_dataset
+pca
+```
+
+```{r}
+install.packages("cluster.datasets")
+install.packages("cluster")
+install.packages("e1071", dep = TRUE)
+install.packages("fpc")
+```
+```{r}
+library(dplyr)
+#library(kableExtra)
+library(knitr)
+library(cluster.datasets)
+library(cluster)
+library(e1071)
+library(fpc)
+```
+```{r}
+hc= hclust(dist(new_dataset))
+hc
+```
+```{r}
+plot(hc,ylab="cluster")
+```
+```{r}
+res = data.frame(class = df2[,15], hca = 0, kmeans = 0,pam=0)
+res$hca= cutree(hc,6)
+table(res$class,res$hca) 
+```
+```{r}
+km3= kmeans(new_dataset,6,iter.max=100)
+km3
+```
+```{r}
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+```{r}
+km3$withinss
+```
+```{r}
+pam3 = pam(new_dataset, 6)
+pam3
+```
+```{r}
+pam3$clusinfo
+```
+```{r}
+res$pam = pam3$clustering
+table(res$class,res$pam)
+```
+```{r}
+hc= hclust(dist(new_dataset),method='single')
+res$hca= cutree(hc,6)
+table(res$class,res$hca)
+```
+```{r}
+hc= hclust(dist(new_dataset),method='complete')
+res$hca= cutree(hc,6)
+table(res$class,res$hca)
+```
+```{r}
+km3= kmeans(new_dataset,6,iter.max=50,algorithm="Lloyd")
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+```{r}
+km3= kmeans(new_dataset,6,iter.max=100,algorithm="Forgy")
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+```{r}
+km3= kmeans(new_dataset,6,iter.max=50,algorithm="Forgy")
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+```{r}
+pam3 = pam(new_dataset, 6,metric = "manhattan")
+res$pam = pam3$clustering
+table(res$class,res$pam)
+```
+```{r}
+pca=prcomp(data.frame(scale(df2[,-c(7,12,15)])),scale=T)
+reduced_dataset=scale(df2[,-c(7,12,15)])
+new_dataset=data.frame(data.matrix(reduced_dataset)%*%data.matrix(pca$rotation[,1:10]))
+new_dataset=data.frame(new_dataset,class=df[,15])
+new_dataset
+```
+```{r}
+km3= kmeans(new_dataset,6,iter.max=100)
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+```{r}
+km3= kmeans(reduced_dataset,6,iter.max=100)
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+```{r}
+km3= kmeans(df1,6,iter.max=100)
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+```{r}
+km3= kmeans(df2,6,iter.max=100)
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+```{r}
+km3= kmeans(df3,6,iter.max=100)
+res$kmeans= km3$cluster
+table(res$class, res$kmeans)
+```
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
